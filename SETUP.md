@@ -46,21 +46,30 @@ until you connect Supabase.
 
 Camera scanning needs **https**, so host it (don't just email the file).
 
-### Option A — Netlify (connect the GitHub repo, auto-build)
+> ⚠️ **Important:** the env vars below are read **at build time** (Vite inlines them).
+> Add them to the host **before** the first build, or redeploy after adding them —
+> otherwise the deployed site ships in offline-demo mode.
 
-1. Push this repo to GitHub (already wired to `kuangeric1234-droid/Stock-Count`).
-2. On **https://app.netlify.com** → **Add new site → Import from GitHub** → pick the repo.
-3. Build settings (Netlify usually auto-detects Vite):
-   - **Build command:** `npm run build`
-   - **Publish directory:** `dist`
-4. Under **Site settings → Environment variables**, add the same two:
-   `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
-5. Deploy → you get `https://your-name.netlify.app`. Share that link.
+### Option A — Vercel (connect the GitHub repo, auto-build) — recommended
 
-### Option B — Drag-and-drop
+1. The repo is already on GitHub (`kuangeric1234-droid/Stock-Count`) with a `vercel.json`.
+2. On **https://vercel.com** → **Add New → Project** → **Import** the repo.
+   Vercel auto-detects Vite (build `npm run build`, output `dist`) — no changes needed.
+3. **Before** clicking Deploy, expand **Environment Variables** and add the two
+   (these live in *Vercel*, not Supabase — they point *at* your Supabase project):
+   - `VITE_SUPABASE_URL` = your Project URL
+   - `VITE_SUPABASE_ANON_KEY` = your anon public key
+4. **Deploy** → you get `https://your-project.vercel.app`. Share that link.
+   - If you ever add the env vars *after* deploying, trigger **Redeploy** so they take effect.
+   - Every `git push` to `main` auto-redeploys.
 
-`npm run build`, then drag the **`dist`** folder onto **https://app.netlify.com/drop**.
-(You must rebuild + re-drop after changes; Option A rebuilds automatically.)
+### Option B — Netlify (connect the GitHub repo, auto-build)
+
+1. On **https://app.netlify.com** → **Add new site → Import from GitHub** → pick the repo.
+2. Build settings (auto-detected): **Build command** `npm run build`, **Publish directory** `dist`.
+3. Under **Site settings → Environment variables**, add `VITE_SUPABASE_URL` and
+   `VITE_SUPABASE_ANON_KEY`, then trigger a deploy.
+4. Deploy → you get `https://your-name.netlify.app`.
 
 On each phone: open the link → browser menu → **Add to Home Screen** → opens like an app.
 
