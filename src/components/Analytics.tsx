@@ -94,7 +94,7 @@ export function Analytics({ items, onExportCSV, onExportPDF }: Props) {
                 <div className={`rank-num ${i < 3 ? 'top' : ''}`}>{i + 1}</div>
                 <div className="rank-photo">{item.photo ? <img src={item.photo} alt="" /> : '📦'}</div>
                 <div className="rank-info">
-                  <div className="rank-name">{item.name}</div>
+                  <div className="rank-name">{item.name || 'Unnamed product'}</div>
                   <div className="rank-bar-track">
                     <div className="rank-bar-fill" style={{ width: `${pct}%`, background: `hsl(${200 + i * 22},65%,55%)` }} />
                   </div>

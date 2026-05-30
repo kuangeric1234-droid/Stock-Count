@@ -126,7 +126,9 @@ export function ProductModal({ init, onClose, onSubmit, onOpenScanner }: Props) 
         </div>
 
         <div className="field-group">
-          <label className="field-label">Product Name *</label>
+          <label className="field-label">
+            Product Name <span style={{ color: '#6b7280', fontWeight: 400 }}>(optional if a photo is added — name it later)</span>
+          </label>
           <input className="field-input" placeholder="Enter product name" value={name} onChange={(e) => setName(e.target.value)} />
         </div>
 

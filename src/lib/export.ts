@@ -28,7 +28,7 @@ export function exportCSV(items: Product[]) {
   const headers = ['Name', 'Quantity', 'Unit', 'Category', 'Unit Price', 'Total Value', 'Barcode', 'Counted By', 'Date', 'Notes']
   const cell = (c: unknown) => `"${String(c == null ? '' : c).replace(/"/g, '""')}"`
   const rows = items.map((i) =>
-    [i.name, i.qty, i.unit, i.category, i.price, (i.qty * i.price).toFixed(2), i.barcode, i.updated_by, i.date, i.note]
+    [i.name || '(unnamed)', i.qty, i.unit, i.category, i.price, (i.qty * i.price).toFixed(2), i.barcode, i.updated_by, i.date, i.note]
       .map(cell)
       .join(','),
   )
@@ -45,7 +45,7 @@ export function exportPDF(items: Product[]) {
     .map(
       (i, n) => `<tr>
         <td>${n + 1}</td>
-        <td>${esc(i.name)}${i.note ? `<div class="n">${esc(i.note)}</div>` : ''}</td>
+        <td>${esc(i.name || '(unnamed)')}${i.note ? `<div class="n">${esc(i.note)}</div>` : ''}</td>
         <td class="r"><b>${i.qty}</b> ${esc(i.unit)}</td>
         <td>${esc(i.category)}</td>
         <td class="r">${i.price ? '$' + Number(i.price).toFixed(2) : '—'}</td>

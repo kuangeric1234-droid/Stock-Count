@@ -82,7 +82,9 @@ export function ProductList({ items, search, setSearch, filterCat, setFilterCat,
             <div className="item-photo">{item.photo ? <img src={item.photo} alt="" /> : '📦'}</div>
             <div className="item-info">
               <div className="item-top">
-                <div className="item-name">{item.name}</div>
+                <div className="item-name">
+                  {item.name || <span style={{ color: 'var(--text3)', fontStyle: 'italic' }}>Unnamed — tap Edit to name</span>}
+                </div>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
                   <div className="item-qty">
                     {item.qty}

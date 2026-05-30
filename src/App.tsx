@@ -104,7 +104,8 @@ export default function App() {
   }
 
   async function handleSubmit(data: SubmitPayload) {
-    if (!data.name) return showToast('Please enter a product name', 'error')
+    const hasPhoto = Boolean(data.photo || data.photoFile)
+    if (!data.name && !hasPhoto) return showToast('Add a product name or a photo', 'error')
     if (data.qty === undefined || Number.isNaN(data.qty) || data.qty < 0) return showToast('Please enter a valid quantity', 'error')
 
     let photo = data.photo
