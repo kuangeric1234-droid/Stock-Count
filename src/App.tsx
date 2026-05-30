@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { CLOUD } from './supabase'
 import type { Product, ToastType } from './types'
 import {
@@ -14,15 +14,18 @@ import {
   todayStr,
 } from './lib/data'
 import { usePresence } from './lib/usePresence'
+import { lookupBarcode } from './lib/lookup'
 import { exportCSV, exportPDF } from './lib/export'
 import { Header } from './components/Header'
 import { ProductList } from './components/ProductList'
 import { Analytics } from './components/Analytics'
 import { ProductModal, type FormInit, type SubmitPayload } from './components/ProductModal'
-import { ScannerModal } from './components/ScannerModal'
 import { NameModal } from './components/NameModal'
 import { ConfirmDialog } from './components/ConfirmDialog'
 import { Toast, type ToastMessage } from './components/Toast'
+
+// Scanner pulls in the (large) ZXing library — load it only when opened.
+const ScannerModal = lazy(() => import('./components/ScannerModal').then((m) => ({ default: m.ScannerModal })))
 
 export default function App() {
   const [items, setItems] = useState<Product[]>([])
@@ -163,7 +166,7 @@ export default function App() {
     else if (result === 'queued') showToast('Deleted offline — will sync when online', 'info')
   }
 
-  function handleScanResult(code: string) {
+  async function handleScanResult(code: string) {
     setScanning(false)
     const existing = items.find((it) => it.barcode === code)
     if (existing) {
@@ -180,11 +183,24 @@ export default function App() {
         photo: existing.photo,
       })
       showToast(`Found: ${existing.name} — qty +1`, 'info')
-    } else {
-      setEditId(null)
-      setModal({ mode: 'add', barcode: code, name: '', qty: '1', unit: 'pcs', category: 'Other', price: '', note: '', photo: null })
-      showToast('Barcode scanned — fill in product details', 'info')
+      return
     }
+    // Unknown barcode — try a free online product lookup to pre-fill details.
+    setEditId(null)
+    showToast('Looking up product…', 'info')
+    const info = await lookupBarcode(code)
+    setModal({
+      mode: 'add',
+      barcode: code,
+      name: info?.name ?? '',
+      qty: '1',
+      unit: 'pcs',
+      category: 'Other',
+      price: '',
+      note: '',
+      photo: info?.image ?? null,
+    })
+    showToast(info?.name ? `Found "${info.name}" — check & save` : 'New barcode — enter product details', info?.name ? 'success' : 'info')
   }
 
   function saveName(name: string) {
@@ -235,7 +251,11 @@ export default function App() {
       {modal && (
         <ProductModal init={modal} onClose={() => setModal(null)} onSubmit={handleSubmit} onOpenScanner={() => { setModal(null); setScanning(true) }} />
       )}
-      {scanning && <ScannerModal onClose={() => setScanning(false)} onResult={handleScanResult} />}
+      {scanning && (
+        <Suspense fallback={<div className="scanner-overlay" style={{ alignItems: 'center', justifyContent: 'center', color: '#fff' }}>Loading camera…</div>}>
+          <ScannerModal onClose={() => setScanning(false)} onResult={handleScanResult} />
+        </Suspense>
+      )}
       {deleteId && <ConfirmDialog onCancel={() => setDeleteId(null)} onConfirm={doDelete} />}
       {nameOpen && <NameModal initial={myName} onSave={saveName} />}
 

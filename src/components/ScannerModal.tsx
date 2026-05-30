@@ -1,64 +1,52 @@
 import { useEffect, useRef, useState } from 'react'
+import { BrowserMultiFormatReader, type IScannerControls } from '@zxing/browser'
 
 interface Props {
   onClose: () => void
   onResult: (code: string) => void
 }
 
-const FORMATS = ['qr_code', 'ean_13', 'ean_8', 'code_128', 'code_39', 'upc_a', 'upc_e', 'itf', 'codabar', 'data_matrix', 'aztec', 'pdf417']
-
 export function ScannerModal({ onClose, onResult }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null)
-  const [fallback, setFallback] = useState<null | { supported: boolean; message?: string }>(null)
+  const [error, setError] = useState<string | null>(null)
   const [manual, setManual] = useState('')
 
-  useEffect(() => {
-    let stream: MediaStream | null = null
-    let raf = 0
-    let stopped = false
+  // Keep the latest callback without restarting the camera on parent re-renders.
+  const onResultRef = useRef(onResult)
+  onResultRef.current = onResult
 
-    async function start() {
-      if (!('BarcodeDetector' in window)) {
-        setFallback({ supported: false })
-        return
-      }
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
-        })
-        const video = videoRef.current
-        if (!video) return
-        video.srcObject = stream
-        await video.play()
-        const detector = new BarcodeDetector({ formats: FORMATS })
-        const tick = async () => {
-          if (stopped) return
-          if (video.readyState >= 2) {
-            try {
-              const codes = await detector.detect(video)
-              if (codes.length > 0) {
-                onResult(codes[0].rawValue)
-                return
-              }
-            } catch {
-              /* transient detect error — keep scanning */
-            }
+  useEffect(() => {
+    const reader = new BrowserMultiFormatReader()
+    let controls: IScannerControls | null = null
+    let done = false
+
+    reader
+      .decodeFromConstraints(
+        { video: { facingMode: 'environment' } },
+        videoRef.current!,
+        (result, _err, ctrl) => {
+          controls = ctrl
+          if (result && !done) {
+            done = true
+            ctrl.stop()
+            onResultRef.current(result.getText())
           }
-          raf = requestAnimationFrame(tick)
-        }
-        raf = requestAnimationFrame(tick)
-      } catch (e) {
-        setFallback({ supported: true, message: e instanceof Error ? e.message : 'Camera unavailable' })
-      }
-    }
-    start()
+        },
+      )
+      .then((ctrl) => {
+        controls = ctrl
+      })
+      .catch((e: unknown) => {
+        setError(e instanceof Error ? e.message : 'Camera unavailable')
+      })
 
     return () => {
-      stopped = true
-      if (raf) cancelAnimationFrame(raf)
-      stream?.getTracks().forEach((t) => t.stop())
+      done = true
+      controls?.stop()
     }
-  }, [onResult])
+  }, [])
+
+  const submitManual = () => manual.trim() && onResult(manual.trim())
 
   return (
     <div className="scanner-overlay">
@@ -69,31 +57,20 @@ export function ScannerModal({ onClose, onResult }: Props) {
         </button>
       </div>
 
-      {fallback ? (
+      {error ? (
         <div className="unsupported-box">
-          <div style={{ fontSize: 48 }}>{fallback.supported ? '📷' : '⚠️'}</div>
-          {fallback.supported ? (
-            <div style={{ fontSize: 14, color: '#f87171' }}>Camera access denied: {fallback.message}</div>
-          ) : (
-            <>
-              <div style={{ fontSize: 16, fontWeight: 600 }}>Scanning not supported</div>
-              <div style={{ fontSize: 13, color: '#9ca3af', lineHeight: 1.6 }}>
-                Please use Chrome 88+ or Edge 88+, or enter the barcode manually.
-              </div>
-            </>
-          )}
+          <div style={{ fontSize: 48 }}>📷</div>
+          <div style={{ fontSize: 14, color: '#f87171' }}>Camera unavailable: {error}</div>
+          <div style={{ fontSize: 13, color: '#9ca3af' }}>Allow camera access in your browser, or enter the barcode manually.</div>
           <div className="manual-col">
             <input
               placeholder="Enter barcode…"
               value={manual}
               onChange={(e) => setManual(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && manual.trim() && onResult(manual.trim())}
+              onKeyDown={(e) => e.key === 'Enter' && submitManual()}
               style={{ background: '#1a1d27', border: '1px solid #2a2d40', borderRadius: 10, padding: '11px 14px', color: '#f3f4f6', fontSize: 15, width: '100%' }}
             />
-            <button
-              onClick={() => manual.trim() && onResult(manual.trim())}
-              style={{ background: '#f5c542', color: '#0f1117', border: 'none', borderRadius: 10, padding: '12px 0', fontSize: 15, fontWeight: 700 }}
-            >
+            <button onClick={submitManual} style={{ background: '#f5c542', color: '#0f1117', border: 'none', borderRadius: 10, padding: '12px 0', fontSize: 15, fontWeight: 700 }}>
               Confirm
             </button>
           </div>

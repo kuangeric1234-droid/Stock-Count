@@ -80,9 +80,10 @@ On each phone: open the link → browser menu → **Add to Home Screen** → ope
 - **First open:** type your name (“Who's counting?”). It's stamped on everything you count.
 - **Live presence:** the green line up top shows who else is counting right now — so two
   people don't double-count the same shelf. Tip: split by aisle/section.
-- **Fastest counting:** tap **Scan**, point at a barcode.
+- **Fastest counting:** tap **Scan**, point at a barcode (works on iPhone + Android).
   - Known item → quantity auto **+1**, just save.
-  - New item → fill the details once; next scan it's recognised.
+  - New item → the app tries to **auto-fill the name & photo** from a free product
+    database (best for food/grocery); otherwise fill the details once and next scan it's recognised.
 - **On the list:** quick **−/+** buttons bump the count without opening the item.
 - **Photos:** tap the photo box → take a picture. Stored in the cloud, visible to everyone.
 - **Finish:** **Analytics & Export** → **Export CSV** (for the books) or **Print / PDF**

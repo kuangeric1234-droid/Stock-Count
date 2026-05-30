@@ -18,7 +18,9 @@ free shareable web link.
 
 ## Features
 
-- 📷 Barcode / QR scanning (auto +1 on a known product, prompts to add a new one)
+- 📷 Barcode / QR scanning that works on **iPhone Safari + Android + desktop** (ZXing)
+- 🔎 Scan an unknown barcode → **auto-fills name & photo** from a free product database (Open Food Facts)
+- ♻️ Known product → auto **+1**; the scanner library loads on-demand to keep startup fast
 - 👥 Live multi-user counting with "who's also counting now" presence
 - 🖼️ Product photos stored in the cloud
 - ➕➖ One-tap quantity stepping on the list for fast counting
