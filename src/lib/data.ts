@@ -97,6 +97,9 @@ export async function loadProducts(): Promise<{ items: Product[]; usedCache: boo
       .select('*')
       .order('created_at', { ascending: false })
     if (error || !data) {
+      // Surface the real reason — usually "table doesn't exist" (SQL not run)
+      // or a bad URL/key. Check the browser console to diagnose.
+      console.error('[Stock Count] Supabase load failed:', error?.message || error, error)
       const cached: Product[] = JSON.parse(localStorage.getItem(CACHE_KEY) || '[]')
       return { items: cached, usedCache: true }
     }

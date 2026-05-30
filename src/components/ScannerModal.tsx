@@ -1,9 +1,35 @@
 import { useEffect, useRef, useState } from 'react'
 import { BrowserMultiFormatReader, type IScannerControls } from '@zxing/browser'
+import { BarcodeFormat, DecodeHintType } from '@zxing/library'
 
 interface Props {
   onClose: () => void
   onResult: (code: string) => void
+}
+
+// Restricting to the formats a shop actually uses + TRY_HARDER greatly
+// improves read rate on phone cameras vs. ZXing's "detect anything" default.
+const hints = new Map()
+hints.set(DecodeHintType.TRY_HARDER, true)
+hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+  BarcodeFormat.EAN_13,
+  BarcodeFormat.EAN_8,
+  BarcodeFormat.UPC_A,
+  BarcodeFormat.UPC_E,
+  BarcodeFormat.CODE_128,
+  BarcodeFormat.CODE_39,
+  BarcodeFormat.ITF,
+  BarcodeFormat.CODABAR,
+  BarcodeFormat.QR_CODE,
+])
+
+// Ask for a sharp rear-camera stream — small barcodes need the detail.
+const constraints: MediaStreamConstraints = {
+  video: {
+    facingMode: { ideal: 'environment' },
+    width: { ideal: 1920 },
+    height: { ideal: 1080 },
+  },
 }
 
 export function ScannerModal({ onClose, onResult }: Props) {
@@ -16,13 +42,13 @@ export function ScannerModal({ onClose, onResult }: Props) {
   onResultRef.current = onResult
 
   useEffect(() => {
-    const reader = new BrowserMultiFormatReader()
+    const reader = new BrowserMultiFormatReader(hints, { delayBetweenScanAttempts: 100 })
     let controls: IScannerControls | null = null
     let done = false
 
     reader
       .decodeFromConstraints(
-        { video: { facingMode: 'environment' } },
+        constraints,
         videoRef.current!,
         (result, _err, ctrl) => {
           controls = ctrl
